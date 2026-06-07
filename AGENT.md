@@ -6,7 +6,7 @@ is the deterministic toolkit; an agent drives it in plain language.
 ## 1. Expose the keyless Kraken tools over MCP
 
 ```bash
-kraken mcp -s market,paper,futures-paper
+kraken mcp -s market,paper,futures
 ```
 
 Only no-auth groups: public market data + spot paper + futures paper. No keys are

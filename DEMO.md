@@ -44,7 +44,7 @@ python3 desk.py hedge --pair MSTRx/USD --notional 5000 --execute
 
 **2:10 — The agent (Agent Zero)**
 ```bash
-kraken mcp -s market,paper,futures-paper
+kraken mcp -s market,paper,futures
 ```
 > "And because the Kraken CLI is MCP-native, I expose only the keyless tools and just
 > *ask* the desk these questions in Claude Code. Everything you saw, an agent can chain

@@ -43,7 +43,7 @@ and yield — drawn from the Kraken CLI, no keys.
 
 ## Phase 4 — Wire the agent layer (MCP)
 ```
-claude mcp add --transport stdio kraken -- kraken mcp -s market,paper,futures-paper
+claude mcp add --transport stdio kraken -- kraken mcp -s market,paper,futures
 ```
 Then inside Claude Code: `/mcp` to confirm "kraken" is connected. Now ask in plain
 language: *"Is STRCx cheap right now?"*, *"Hedge a $5k MSTRx position in futures paper."*

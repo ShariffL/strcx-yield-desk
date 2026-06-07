@@ -1,5 +1,7 @@
 # STRCx Yield Desk
 
+[![CI](https://github.com/ShariffL/strcx-yield-desk/actions/workflows/ci.yml/badge.svg)](https://github.com/ShariffL/strcx-yield-desk/actions/workflows/ci.yml)
+
 **Run a tokenised preferred like a fixed-income desk — on top of the Kraken CLI.**
 
 STRCx (Strategy PP Variable xStock) isn't a moonshot token. It's a tokenised
@@ -11,9 +13,9 @@ Most agents treat every token like a bet. This one treats STRCx like credit.
 
 ```
 $ python3 desk.py --mock demo
-STRCx 97.44 USD  |  DISCOUNT (-2.56% vs 100 par)
-  current yield : 9.24%   (at 9.0% coupon on par)
-  pull-to-par   : +2.63%  if it reverts to par
+STRCx 98.91 USD  |  DISCOUNT (-1.09% vs 100 par)
+  current yield : 9.10%   (at 9.0% coupon on par)
+  pull-to-par   : +1.10%  if it reverts to par
   read          : trading below par — you're paid to wait (yield + upside to par).
 ...
 ```
@@ -78,7 +80,7 @@ The Kraken CLI ships an MCP server. Expose only the keyless groups and let an
 agent (Claude Code, Cursor, ...) drive the desk in plain language:
 
 ```bash
-kraken mcp -s market,paper,futures-paper
+kraken mcp -s market,paper,futures
 ```
 
 See `AGENT.md` for the wiring and example prompts ("is STRCx cheap right now?",
