@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>STRCx Yield Desk</title>
+<style>
+  :root{
+    --bg:#0a0d16; --bg2:#0e1320; --card:#121829; --card2:#161d31;
+    --line:#26304a; --ink:#eaf0ff; --muted:#93a0bd; --faint:#5b6884;
+    --pos:#28d39b; --posdim:#16493c; --neg:#ff6b6b; --warn:#f5b955;
+    --acc1:#7c5cff; --acc2:#23d3bb;
+    --radius:18px; --shadow:0 18px 50px rgba(0,0,0,.45);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 600px at 12% -8%, #1a1444 0%, transparent 55%),
+      radial-gradient(900px 520px at 100% 0%, #06363a 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 60px}
+
+  /* ---- header ---- */
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 6px 16px rgba(124,92,255,.45))}
+  .title h1{margin:0;font-size:23px;letter-spacing:-.3px;font-weight:800}
+  .title h1 .x{background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .title p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+    font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+  .pill.key{color:var(--acc2);border-color:#1c4d4a;background:#0d201f}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--pos);box-shadow:0 0 0 3px rgba(40,211,155,.18)}
+  a.ghost{color:var(--muted);text-decoration:none;border:1px solid var(--line);background:var(--card);
+    padding:7px 13px;border-radius:999px;font-size:12px;font-weight:600;transition:.15s}
+  a.ghost:hover{color:var(--ink);border-color:#3a466a}
+
+  /* ---- grid ---- */
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:var(--radius);padding:20px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .card h2{margin:0 0 2px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .card .sub{color:var(--muted);font-size:12.5px;margin:0 0 16px}
+  .col-7{grid-column:span 7} .col-5{grid-column:span 5}
+  .col-6{grid-column:span 6} .col-12{grid-column:span 12}
+  @media(max-width:860px){.col-7,.col-5,.col-6{grid-column:span 12}}
+
+  /* ---- scan hero ---- */
+  .price{display:flex;align-items:baseline;gap:12px;margin:4px 0 2px}
+  .price .big{font-size:46px;font-weight:800;letter-spacing:-1.5px}
+  .price .ccy{color:var(--muted);font-size:15px;font-weight:600}
+  .state{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;
+    padding:5px 11px;border-radius:999px}
+  .state.disc{color:var(--pos);background:var(--posdim);border:1px solid #1d6a55}
+  .state.prem{color:var(--warn);background:#3a2f12;border:1px solid #6a5318}
+  .state.par{color:var(--muted);background:#1b2238;border:1px solid var(--line)}
+
+  /* par gauge */
+  .gauge{margin:18px 0 4px}
+  .gtrack{position:relative;height:12px;border-radius:999px;
+    background:linear-gradient(90deg,#1d6a55 0%, #16493c 38%, #2a3354 50%, #5a4a1e 62%, #6a5318 100%);
+    border:1px solid var(--line)}
+  .gpar{position:absolute;top:-6px;bottom:-6px;width:2px;left:50%;background:var(--ink);opacity:.6}
+  .gpar::after{content:"par 100";position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+    font-size:10px;color:var(--muted);white-space:nowrap}
+  .gmark{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--acc1);transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .gscale{display:flex;justify-content:space-between;color:var(--faint);font-size:10.5px;margin-top:8px}
+
+  .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px}
+  .stat .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .stat .v{font-size:22px;font-weight:800;margin-top:3px}
+  .v.pos{color:var(--pos)} .v.warn{color:var(--warn)}
+  .read{margin-top:16px;padding:12px 14px;border-radius:12px;background:#0c1322;border:1px solid var(--line);
+    color:var(--muted);font-size:13px}
+  .read b{color:var(--ink)}
+
+  /* slider control */
+  .ctrl{margin-top:16px}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .ctrl label{font-size:12px;color:var(--muted);font-weight:600}
+  .ctrl .val{font-size:13px;font-weight:800;color:var(--acc2)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:#1c2440;outline:none;border:1px solid var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:linear-gradient(180deg,var(--acc1),#5a3fe0);border:2px solid #fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
+    background:var(--acc1);border:2px solid #fff;cursor:pointer}
+
+  /* chart */
+  svg.chart{width:100%;height:200px;display:block}
+  .chip{display:inline-block;font-size:11px;color:var(--faint);margin-right:14px}
+  .chip b{color:var(--muted)}
+
+  /* rv band */
+  .band{position:relative;height:46px;margin:18px 0 6px}
+  .bar{position:absolute;top:18px;height:8px;border-radius:999px;background:#1c2440;left:0;right:0;border:1px solid var(--line)}
+  .bz{position:absolute;top:18px;height:8px;border-radius:999px;background:linear-gradient(90deg,#16493c,#1d6a55)}
+  .bmean{position:absolute;top:8px;bottom:8px;width:2px;background:var(--muted)}
+  .bcur{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--acc2);
+    transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .bscale{position:absolute;bottom:-4px;width:100%;display:flex;justify-content:space-between;color:var(--faint);font-size:10px}
+
+  .signal{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;padding:7px 13px;border-radius:10px}
+  .signal.neutral{color:var(--muted);background:#1b2238;border:1px solid var(--line)}
+  .signal.strcx{color:var(--pos);background:var(--posdim);border:1px solid #1d6a55}
+  .signal.mstrx{color:var(--warn);background:#3a2f12;border:1px solid #6a5318}
+
+  /* hedge rows */
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed #1c2540;font-size:14px}
+  .kv:last-child{border-bottom:0}
+  .kv .k{color:var(--muted)} .kv .v{font-weight:700}
+  .quality{margin-top:12px;font-size:12px;color:var(--faint)}
+  .qbar{height:6px;border-radius:999px;background:#1c2440;margin-top:6px;overflow:hidden;border:1px solid var(--line)}
+  .qbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--acc1),var(--acc2))}
+
+  /* holdsim outputs */
+  .outs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .out{background:#0c1322;border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .out .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+  .out .v{font-size:20px;font-weight:800;margin-top:4px}
+  .out.hl .v{color:var(--pos)}
+
+  footer{margin-top:30px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  footer a{color:var(--muted)}
+  .src{margin-top:6px;color:#46506b;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <!-- STRCx emblem (generated mark — swap with the official asset if you have it) -->
+      <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="STRCx logo">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="64" y2="64">
+            <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#23d3bb"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#g)"/>
+        <rect x="3" y="3" width="58" height="58" rx="16" fill="#000" opacity="0.06"/>
+        <!-- par line -->
+        <line x1="14" y1="32" x2="50" y2="32" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+        <!-- candle ticks straddling par -->
+        <rect x="20" y="20" width="5" height="14" rx="2" fill="#fff" opacity=".95"/>
+        <rect x="39" y="30" width="5" height="15" rx="2" fill="#0a0d16" opacity=".55"/>
+        <!-- S monogram -->
+        <path d="M41 22c-3-3-13-3-13 3 0 6 13 3 13 9 0 6-10 6-14 3"
+              stroke="#fff" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".0"/>
+      </svg>
+      <div class="title">
+        <h1>STRC<span class="x">x</span> Yield Desk</h1>
+        <p>A tokenised preferred, run like a fixed-income desk — on the Kraken&nbsp;CLI</p>
+      </div>
+    </div>
+    <div class="spacer" style="flex:1"></div>
+    <span class="pill key"><span class="dot"></span> keyless · runs cold</span>
+    <a class="ghost" id="repoLink" href="#" target="_blank" rel="noopener">View on GitHub →</a>
+  </header>
+
+  <div class="grid">
+
+    <!-- SCAN HERO -->
+    <section class="card col-7">
+      <h2>Scan · par / discount &amp; real yield</h2>
+      <p class="sub">Is STRCx cheap versus its $100 par, and what am I actually earning?</p>
+      <div class="price">
+        <span class="big" id="px">—</span><span class="ccy">USD</span>
+        <span id="statePill" class="state par">—</span>
+      </div>
+
+      <div class="gauge">
+        <div class="gtrack">
+          <div class="gpar"></div>
+          <div class="gmark" id="gmark" style="left:50%"></div>
+        </div>
+        <div class="gscale"><span>90</span><span>95</span><span>100</span><span>105</span><span>110</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="k">Current yield</div><div class="v pos" id="cy">—</div></div>
+        <div class="stat"><div class="k">Pull-to-par</div><div class="v" id="ptp">—</div></div>
+        <div class="stat"><div class="k">vs par</div><div class="v" id="vspar">—</div></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="rate">Assumed coupon (STRC is variable)</label><span class="val" id="rateVal">9.0%</span></div>
+        <input type="range" id="rate" min="4" max="14" step="0.1" value="9" />
+      </div>
+
+      <div class="read" id="read">—</div>
+    </section>
+
+    <!-- PRICE CHART -->
+    <section class="card col-5">
+      <h2>STRCx price history</h2>
+      <p class="sub">Daily closes vs the $100 par line</p>
+      <svg class="chart" id="priceChart" viewBox="0 0 520 200" preserveAspectRatio="none"></svg>
+      <div style="margin-top:10px">
+        <span class="chip">low <b id="cLo">—</b></span>
+        <span class="chip">high <b id="cHi">—</b></span>
+        <span class="chip">n <b id="cN">—</b> candles</span>
+      </div>
+    </section>
+
+    <!-- RV SIGNAL -->
+    <section class="card col-6">
+      <h2>Relative value · MSTRx vs STRCx</h2>
+      <p class="sub">Common (volatile) vs preferred (stable) — risk-on or risk-off?</p>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
+        <div class="stat"><div class="k">Ratio</div><div class="v" id="rvRatio">—</div></div>
+        <div class="stat"><div class="k">z-score</div><div class="v" id="rvZ">—</div></div>
+        <div style="flex:1"></div>
+        <span class="signal neutral" id="rvSignal">—</span>
+      </div>
+      <div class="band">
+        <div class="bar"></div>
+        <div class="bz" id="bz"></div>
+        <div class="bmean" id="bmean"></div>
+        <div class="bcur" id="bcur"></div>
+        <div class="bscale"><span id="bLo">—</span><span>mean ± 1σ</span><span id="bHi">—</span></div>
+      </div>
+      <div class="read" id="rvRead">—</div>
+    </section>
+
+    <!-- HEDGE -->
+    <section class="card col-6">
+      <h2>BTC-beta hedge · futures paper</h2>
+      <p class="sub">Strip the BTC swing out of a $5,000 MSTRx long — no keys, no money</p>
+      <div class="kv"><span class="k">Beta to BTC</span><span class="v" id="hBeta">—</span></div>
+      <div class="kv"><span class="k">Hedge notional</span><span class="v" id="hNot">—</span></div>
+      <div class="kv"><span class="k">Action</span><span class="v" id="hAct">—</span></div>
+      <div class="kv"><span class="k">Leverage</span><span class="v" id="hLev">—</span></div>
+      <div class="quality">
+        Fit quality — R² <span id="hR2">—</span>, corr <span id="hCorr">—</span>, n=<span id="hN">—</span>
+        <div class="qbar"><i id="hR2bar" style="width:0%"></i></div>
+      </div>
+    </section>
+
+    <!-- HOLD SIMULATOR -->
+    <section class="card col-12">
+      <h2>Hold simulator · interactive</h2>
+      <p class="sub">If I park money in STRCx and let the daily rebase multiplier compound…</p>
+      <div class="grid" style="gap:18px">
+        <div class="col-6">
+          <div class="ctrl">
+            <div class="row"><label for="amt">Amount</label><span class="val" id="amtVal">$5,000</span></div>
+            <input type="range" id="amt" min="500" max="50000" step="500" value="5000" />
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="mo">Hold period</label><span class="val" id="moVal">12 months</span></div>
+            <input type="range" id="mo" min="1" max="36" step="1" value="12" />
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="hrate">Assumed coupon</label><span class="val" id="hrateVal">9.0%</span></div>
+            <input type="range" id="hrate" min="4" max="14" step="0.1" value="9" />
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="outs">
+            <div class="out"><div class="k">Tokens at entry</div><div class="v" id="t0">—</div></div>
+            <div class="out"><div class="k">Tokens after</div><div class="v" id="t1">—</div></div>
+            <div class="out hl"><div class="k">Yield earned</div><div class="v" id="yp">—</div></div>
+            <div class="out"><div class="k">Value if flat</div><div class="v" id="vf">—</div></div>
+            <div class="out hl"><div class="k">Value if → par</div><div class="v" id="vp">—</div></div>
+            <div class="out"><div class="k">Entry price</div><div class="v" id="ep">—</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    Keyless demo · public market data + local futures-paper simulator · <b>not financial advice</b>.<br/>
+    <a id="repoLink2" href="#" target="_blank" rel="noopener">github.com/ShariffL/strcx-yield-desk</a>
+    <div class="src">Numbers baked from the real <code>desk.py</code> engine (mock dataset). Regenerate: <code>python3 web/build.py</code></div>
+  </footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const PAR = DATA.meta.par;
+const LOC='en-US';
+const fmt = (n,d=2)=>Number(n).toLocaleString(LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd = (n,d=0)=>'$'+Number(n).toLocaleString(LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ---- repo links ----
+document.getElementById('repoLink').href = DATA.meta.repo;
+document.getElementById('repoLink2').href = DATA.meta.repo;
+
+// ---- analytics mirrored from analytics.py ----
+const currentYield = (price,rate)=> (PAR*rate)/price*100;
+const pullToPar    = (price)=> (PAR/price-1)*100;
+const pctToPar     = (price)=> (price/PAR-1)*100;
+function holdSim(amount,price,rate,months){
+  const t0=amount/price, g=Math.pow(1+rate/12,months), t1=t0*g;
+  return {t0,t1,yieldPct:(g-1)*100,valueFlat:t1*price,valuePar:t1*PAR};
+}
+const clampPct = x => Math.max(0,Math.min(100,x));
+
+// ================= SCAN =================
+const scan = DATA.scan;
+const price = scan.price;
+function renderScan(rate){
+  document.getElementById('px').textContent = fmt(price,2);
+  const pct = pctToPar(price);
+  const state = pct < -0.05 ? 'disc' : pct > 0.05 ? 'prem' : 'par';
+  const label = state==='disc'?'DISCOUNT':state==='prem'?'PREMIUM':'AT PAR';
+  const sp = document.getElementById('statePill');
+  sp.className = 'state '+state;
+  sp.textContent = `${label} ${pct>=0?'+':''}${fmt(pct,2)}% vs ${PAR}`;
+  // gauge: map 90..110 -> 0..100%
+  const g = clampPct((price-90)/20*100);
+  document.getElementById('gmark').style.left = g+'%';
+  const cy = currentYield(price,rate);
+  document.getElementById('cy').textContent = fmt(cy,2)+'%';
+  const ptp = pullToPar(price);
+  const ptpEl = document.getElementById('ptp');
+  ptpEl.textContent = (ptp>=0?'+':'')+fmt(ptp,2)+'%';
+  ptpEl.className = 'v '+(ptp>=0?'pos':'warn');
+  const vs = document.getElementById('vspar');
+  vs.textContent = (pct>=0?'+':'')+fmt(pct,2)+'%';
+  vs.className = 'v '+(pct<0?'pos':'warn');
+  document.getElementById('read').innerHTML =
+    pct < -0.25 ? `Trading <b>below par</b> — you're paid to wait: ${fmt(cy,2)}% carry plus <b>${fmt(ptp,2)}%</b> upside if it reverts to par.`
+    : pct > 0.25 ? `Trading <b>above par</b> — yield only, no par upside; size accordingly.`
+    : `Right around par — a clean <b>${fmt(cy,2)}%</b> carry play.`;
+}
+const rateEl = document.getElementById('rate');
+rateEl.addEventListener('input',()=>{
+  document.getElementById('rateVal').textContent = fmt(rateEl.value,1)+'%';
+  renderScan(rateEl.value/100);
+});
+renderScan(0.09);
+
+// ================= PRICE CHART (hand-rolled SVG) =================
+(function(){
+  const pts = DATA.series.strcx.map(p=>p[1]);
+  const W=520,H=200,pad=10;
+  const lo=Math.min(...pts,PAR), hi=Math.max(...pts,PAR);
+  const span=(hi-lo)||1;
+  const X=i=> pad + i*(W-2*pad)/(pts.length-1);
+  const Y=v=> pad + (1-(v-lo)/span)*(H-2*pad);
+  const line = pts.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const area = `${line} L${X(pts.length-1).toFixed(1)} ${H-pad} L${X(0).toFixed(1)} ${H-pad} Z`;
+  const parY = Y(PAR).toFixed(1);
+  const svg=document.getElementById('priceChart');
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#23d3bb" stop-opacity=".30"/>
+        <stop offset="1" stop-color="#23d3bb" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#23d3bb"/>
+      </linearGradient>
+    </defs>
+    <line x1="${pad}" y1="${parY}" x2="${W-pad}" y2="${parY}" stroke="#ffffff" stroke-opacity=".28" stroke-dasharray="4 4"/>
+    <text x="${W-pad}" y="${parY-5}" text-anchor="end" fill="#93a0bd" font-size="10">par ${PAR}</text>
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  `;
+  document.getElementById('cLo').textContent = fmt(Math.min(...pts),2);
+  document.getElementById('cHi').textContent = fmt(Math.max(...pts),2);
+  document.getElementById('cN').textContent = pts.length;
+})();
+
+// ================= RV =================
+(function(){
+  const rv = DATA.rv;
+  document.getElementById('rvRatio').textContent = fmt(rv.ratio,3);
+  const zEl=document.getElementById('rvZ');
+  zEl.textContent = (rv.zscore>=0?'+':'')+fmt(rv.zscore,2);
+  const sig = rv.signal;
+  const sEl=document.getElementById('rvSignal');
+  const map={NEUTRAL:['neutral','NEUTRAL'],TILT_STRCX:['strcx','TILT → STRCx'],TILT_MSTRX:['mstrx','TILT → MSTRx']};
+  sEl.className='signal '+map[sig][0]; sEl.textContent=map[sig][1];
+  document.getElementById('rvRead').textContent = rv.reading;
+  // band: mean ± 2sd window, shade ±1sd
+  const m=rv.ratio_mean, sd=rv.ratio_sd;
+  if(m!=null && sd){
+    const lo=m-2*sd, hi=m+2*sd, w=hi-lo;
+    const pos=x=> clampPct((x-lo)/w*100);
+    document.getElementById('bz').style.left=pos(m-sd)+'%';
+    document.getElementById('bz').style.right=(100-pos(m+sd))+'%';
+    document.getElementById('bmean').style.left=pos(m)+'%';
+    document.getElementById('bcur').style.left=pos(rv.ratio)+'%';
+    document.getElementById('bLo').textContent=fmt(lo,2);
+    document.getElementById('bHi').textContent=fmt(hi,2);
+  }
+})();
+
+// ================= HEDGE =================
+(function(){
+  const h=DATA.hedge, q=h.beta_quality||{};
+  document.getElementById('hBeta').textContent = fmt(h.beta_to_btc,2);
+  document.getElementById('hNot').textContent = usd(h.hedge_notional_usd,0);
+  document.getElementById('hAct').textContent = `SHORT ${fmt(h.btc_short_size,4)} ${DATA.meta.btc_perp}`;
+  document.getElementById('hLev').textContent = h.leverage+'×  (paper)';
+  document.getElementById('hR2').textContent = q.r2!=null?fmt(q.r2,2):'—';
+  document.getElementById('hCorr').textContent = q.corr!=null?(q.corr>=0?'+':'')+fmt(q.corr,2):'—';
+  document.getElementById('hN').textContent = q.n!=null?q.n:'—';
+  document.getElementById('hR2bar').style.width = clampPct((q.r2||0)*100)+'%';
+})();
+
+// ================= HOLD SIM =================
+const amt=document.getElementById('amt'), mo=document.getElementById('mo'), hrate=document.getElementById('hrate');
+function renderHold(){
+  const A=+amt.value, M=+mo.value, R=hrate.value/100;
+  document.getElementById('amtVal').textContent = usd(A,0);
+  document.getElementById('moVal').textContent = M+' month'+(M>1?'s':'');
+  document.getElementById('hrateVal').textContent = fmt(hrate.value,1)+'%';
+  const r=holdSim(A,price,R,M);
+  document.getElementById('t0').textContent = fmt(r.t0,3);
+  document.getElementById('t1').textContent = fmt(r.t1,3);
+  document.getElementById('yp').textContent = '+'+fmt(r.yieldPct,2)+'%';
+  document.getElementById('vf').textContent = usd(r.valueFlat,0);
+  document.getElementById('vp').textContent = usd(r.valuePar,0);
+  document.getElementById('ep').textContent = fmt(price,2);
+}
+[amt,mo,hrate].forEach(el=>el.addEventListener('input',renderHold));
+renderHold();
+</script>
+</body>
+</html>

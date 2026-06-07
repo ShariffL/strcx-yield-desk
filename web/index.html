@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>STRCx Yield Desk</title>
+<style>
+  :root{
+    --bg:#0a0d16; --bg2:#0e1320; --card:#121829; --card2:#161d31;
+    --line:#26304a; --ink:#eaf0ff; --muted:#93a0bd; --faint:#5b6884;
+    --pos:#28d39b; --posdim:#16493c; --neg:#ff6b6b; --warn:#f5b955;
+    --acc1:#7c5cff; --acc2:#23d3bb;
+    --radius:18px; --shadow:0 18px 50px rgba(0,0,0,.45);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 600px at 12% -8%, #1a1444 0%, transparent 55%),
+      radial-gradient(900px 520px at 100% 0%, #06363a 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 60px}
+
+  /* ---- header ---- */
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 6px 16px rgba(124,92,255,.45))}
+  .title h1{margin:0;font-size:23px;letter-spacing:-.3px;font-weight:800}
+  .title h1 .x{background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .title p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+    font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+  .pill.key{color:var(--acc2);border-color:#1c4d4a;background:#0d201f}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--pos);box-shadow:0 0 0 3px rgba(40,211,155,.18)}
+  a.ghost{color:var(--muted);text-decoration:none;border:1px solid var(--line);background:var(--card);
+    padding:7px 13px;border-radius:999px;font-size:12px;font-weight:600;transition:.15s}
+  a.ghost:hover{color:var(--ink);border-color:#3a466a}
+
+  /* ---- grid ---- */
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:var(--radius);padding:20px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .card h2{margin:0 0 2px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .card .sub{color:var(--muted);font-size:12.5px;margin:0 0 16px}
+  .col-7{grid-column:span 7} .col-5{grid-column:span 5}
+  .col-6{grid-column:span 6} .col-12{grid-column:span 12}
+  @media(max-width:860px){.col-7,.col-5,.col-6{grid-column:span 12}}
+
+  /* ---- scan hero ---- */
+  .price{display:flex;align-items:baseline;gap:12px;margin:4px 0 2px}
+  .price .big{font-size:46px;font-weight:800;letter-spacing:-1.5px}
+  .price .ccy{color:var(--muted);font-size:15px;font-weight:600}
+  .state{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;
+    padding:5px 11px;border-radius:999px}
+  .state.disc{color:var(--pos);background:var(--posdim);border:1px solid #1d6a55}
+  .state.prem{color:var(--warn);background:#3a2f12;border:1px solid #6a5318}
+  .state.par{color:var(--muted);background:#1b2238;border:1px solid var(--line)}
+
+  /* par gauge */
+  .gauge{margin:18px 0 4px}
+  .gtrack{position:relative;height:12px;border-radius:999px;
+    background:linear-gradient(90deg,#1d6a55 0%, #16493c 38%, #2a3354 50%, #5a4a1e 62%, #6a5318 100%);
+    border:1px solid var(--line)}
+  .gpar{position:absolute;top:-6px;bottom:-6px;width:2px;left:50%;background:var(--ink);opacity:.6}
+  .gpar::after{content:"par 100";position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+    font-size:10px;color:var(--muted);white-space:nowrap}
+  .gmark{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--acc1);transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .gscale{display:flex;justify-content:space-between;color:var(--faint);font-size:10.5px;margin-top:8px}
+
+  .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px}
+  .stat .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+  .stat .v{font-size:22px;font-weight:800;margin-top:3px}
+  .v.pos{color:var(--pos)} .v.warn{color:var(--warn)}
+  .read{margin-top:16px;padding:12px 14px;border-radius:12px;background:#0c1322;border:1px solid var(--line);
+    color:var(--muted);font-size:13px}
+  .read b{color:var(--ink)}
+
+  /* slider control */
+  .ctrl{margin-top:16px}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .ctrl label{font-size:12px;color:var(--muted);font-weight:600}
+  .ctrl .val{font-size:13px;font-weight:800;color:var(--acc2)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:#1c2440;outline:none;border:1px solid var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:linear-gradient(180deg,var(--acc1),#5a3fe0);border:2px solid #fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
+    background:var(--acc1);border:2px solid #fff;cursor:pointer}
+
+  /* chart */
+  svg.chart{width:100%;height:200px;display:block}
+  .chip{display:inline-block;font-size:11px;color:var(--faint);margin-right:14px}
+  .chip b{color:var(--muted)}
+
+  /* rv band */
+  .band{position:relative;height:46px;margin:18px 0 6px}
+  .bar{position:absolute;top:18px;height:8px;border-radius:999px;background:#1c2440;left:0;right:0;border:1px solid var(--line)}
+  .bz{position:absolute;top:18px;height:8px;border-radius:999px;background:linear-gradient(90deg,#16493c,#1d6a55)}
+  .bmean{position:absolute;top:8px;bottom:8px;width:2px;background:var(--muted)}
+  .bcur{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--acc2);
+    transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .bscale{position:absolute;bottom:-4px;width:100%;display:flex;justify-content:space-between;color:var(--faint);font-size:10px}
+
+  .signal{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;padding:7px 13px;border-radius:10px}
+  .signal.neutral{color:var(--muted);background:#1b2238;border:1px solid var(--line)}
+  .signal.strcx{color:var(--pos);background:var(--posdim);border:1px solid #1d6a55}
+  .signal.mstrx{color:var(--warn);background:#3a2f12;border:1px solid #6a5318}
+
+  /* hedge rows */
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed #1c2540;font-size:14px}
+  .kv:last-child{border-bottom:0}
+  .kv .k{color:var(--muted)} .kv .v{font-weight:700}
+  .quality{margin-top:12px;font-size:12px;color:var(--faint)}
+  .qbar{height:6px;border-radius:999px;background:#1c2440;margin-top:6px;overflow:hidden;border:1px solid var(--line)}
+  .qbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--acc1),var(--acc2))}
+
+  /* holdsim outputs */
+  .outs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .out{background:#0c1322;border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .out .k{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+  .out .v{font-size:20px;font-weight:800;margin-top:4px}
+  .out.hl .v{color:var(--pos)}
+
+  footer{margin-top:30px;color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  footer a{color:var(--muted)}
+  .src{margin-top:6px;color:#46506b;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <!-- STRCx emblem (generated mark — swap with the official asset if you have it) -->
+      <svg class="logo" viewBox="0 0 64 64" fill="none" aria-label="STRCx logo">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="64" y2="64">
+            <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#23d3bb"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="58" height="58" rx="16" fill="url(#g)"/>
+        <rect x="3" y="3" width="58" height="58" rx="16" fill="#000" opacity="0.06"/>
+        <!-- par line -->
+        <line x1="14" y1="32" x2="50" y2="32" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+        <!-- candle ticks straddling par -->
+        <rect x="20" y="20" width="5" height="14" rx="2" fill="#fff" opacity=".95"/>
+        <rect x="39" y="30" width="5" height="15" rx="2" fill="#0a0d16" opacity=".55"/>
+        <!-- S monogram -->
+        <path d="M41 22c-3-3-13-3-13 3 0 6 13 3 13 9 0 6-10 6-14 3"
+              stroke="#fff" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".0"/>
+      </svg>
+      <div class="title">
+        <h1>STRC<span class="x">x</span> Yield Desk</h1>
+        <p>A tokenised preferred, run like a fixed-income desk — on the Kraken&nbsp;CLI</p>
+      </div>
+    </div>
+    <div class="spacer" style="flex:1"></div>
+    <span class="pill key"><span class="dot"></span> keyless · runs cold</span>
+    <a class="ghost" id="repoLink" href="#" target="_blank" rel="noopener">View on GitHub →</a>
+  </header>
+
+  <div class="grid">
+
+    <!-- SCAN HERO -->
+    <section class="card col-7">
+      <h2>Scan · par / discount &amp; real yield</h2>
+      <p class="sub">Is STRCx cheap versus its $100 par, and what am I actually earning?</p>
+      <div class="price">
+        <span class="big" id="px">—</span><span class="ccy">USD</span>
+        <span id="statePill" class="state par">—</span>
+      </div>
+
+      <div class="gauge">
+        <div class="gtrack">
+          <div class="gpar"></div>
+          <div class="gmark" id="gmark" style="left:50%"></div>
+        </div>
+        <div class="gscale"><span>90</span><span>95</span><span>100</span><span>105</span><span>110</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="k">Current yield</div><div class="v pos" id="cy">—</div></div>
+        <div class="stat"><div class="k">Pull-to-par</div><div class="v" id="ptp">—</div></div>
+        <div class="stat"><div class="k">vs par</div><div class="v" id="vspar">—</div></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="row"><label for="rate">Assumed coupon (STRC is variable)</label><span class="val" id="rateVal">9.0%</span></div>
+        <input type="range" id="rate" min="4" max="14" step="0.1" value="9" />
+      </div>
+
+      <div class="read" id="read">—</div>
+    </section>
+
+    <!-- PRICE CHART -->
+    <section class="card col-5">
+      <h2>STRCx price history</h2>
+      <p class="sub">Daily closes vs the $100 par line</p>
+      <svg class="chart" id="priceChart" viewBox="0 0 520 200" preserveAspectRatio="none"></svg>
+      <div style="margin-top:10px">
+        <span class="chip">low <b id="cLo">—</b></span>
+        <span class="chip">high <b id="cHi">—</b></span>
+        <span class="chip">n <b id="cN">—</b> candles</span>
+      </div>
+    </section>
+
+    <!-- RV SIGNAL -->
+    <section class="card col-6">
+      <h2>Relative value · MSTRx vs STRCx</h2>
+      <p class="sub">Common (volatile) vs preferred (stable) — risk-on or risk-off?</p>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
+        <div class="stat"><div class="k">Ratio</div><div class="v" id="rvRatio">—</div></div>
+        <div class="stat"><div class="k">z-score</div><div class="v" id="rvZ">—</div></div>
+        <div style="flex:1"></div>
+        <span class="signal neutral" id="rvSignal">—</span>
+      </div>
+      <div class="band">
+        <div class="bar"></div>
+        <div class="bz" id="bz"></div>
+        <div class="bmean" id="bmean"></div>
+        <div class="bcur" id="bcur"></div>
+        <div class="bscale"><span id="bLo">—</span><span>mean ± 1σ</span><span id="bHi">—</span></div>
+      </div>
+      <div class="read" id="rvRead">—</div>
+    </section>
+
+    <!-- HEDGE -->
+    <section class="card col-6">
+      <h2>BTC-beta hedge · futures paper</h2>
+      <p class="sub">Strip the BTC swing out of a $5,000 MSTRx long — no keys, no money</p>
+      <div class="kv"><span class="k">Beta to BTC</span><span class="v" id="hBeta">—</span></div>
+      <div class="kv"><span class="k">Hedge notional</span><span class="v" id="hNot">—</span></div>
+      <div class="kv"><span class="k">Action</span><span class="v" id="hAct">—</span></div>
+      <div class="kv"><span class="k">Leverage</span><span class="v" id="hLev">—</span></div>
+      <div class="quality">
+        Fit quality — R² <span id="hR2">—</span>, corr <span id="hCorr">—</span>, n=<span id="hN">—</span>
+        <div class="qbar"><i id="hR2bar" style="width:0%"></i></div>
+      </div>
+    </section>
+
+    <!-- HOLD SIMULATOR -->
+    <section class="card col-12">
+      <h2>Hold simulator · interactive</h2>
+      <p class="sub">If I park money in STRCx and let the daily rebase multiplier compound…</p>
+      <div class="grid" style="gap:18px">
+        <div class="col-6">
+          <div class="ctrl">
+            <div class="row"><label for="amt">Amount</label><span class="val" id="amtVal">$5,000</span></div>
+            <input type="range" id="amt" min="500" max="50000" step="500" value="5000" />
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="mo">Hold period</label><span class="val" id="moVal">12 months</span></div>
+            <input type="range" id="mo" min="1" max="36" step="1" value="12" />
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="hrate">Assumed coupon</label><span class="val" id="hrateVal">9.0%</span></div>
+            <input type="range" id="hrate" min="4" max="14" step="0.1" value="9" />
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="outs">
+            <div class="out"><div class="k">Tokens at entry</div><div class="v" id="t0">—</div></div>
+            <div class="out"><div class="k">Tokens after</div><div class="v" id="t1">—</div></div>
+            <div class="out hl"><div class="k">Yield earned</div><div class="v" id="yp">—</div></div>
+            <div class="out"><div class="k">Value if flat</div><div class="v" id="vf">—</div></div>
+            <div class="out hl"><div class="k">Value if → par</div><div class="v" id="vp">—</div></div>
+            <div class="out"><div class="k">Entry price</div><div class="v" id="ep">—</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    Keyless demo · public market data + local futures-paper simulator · <b>not financial advice</b>.<br/>
+    <a id="repoLink2" href="#" target="_blank" rel="noopener">github.com/ShariffL/strcx-yield-desk</a>
+    <div class="src">Numbers baked from the real <code>desk.py</code> engine (mock dataset). Regenerate: <code>python3 web/build.py</code></div>
+  </footer>
+</div>
+
+<script>
+const DATA = {"scan":{"tool":"scan","pair":"STRCx/USD","price":98.91,"par":100.0,"pct_to_par":-1.09,"state":"DISCOUNT","current_yield_pct":9.099,"pull_to_par_pct":1.102,"annual_rate_used":0.09},"rv":{"ratio":1.2471,"ratio_mean":1.3673,"ratio_sd":0.2015,"zscore":-0.597,"n_obs":90,"signal":"NEUTRAL","reading":"No strong relative-value edge right now.","tool":"rv","mstrx":123.35,"strcx":98.91,"lookback":90,"interval":1440},"hedge":{"tool":"hedge","pair":"MSTRx/USD","position_notional":5000.0,"beta_to_btc":1.626,"beta_quality":{"beta":1.6258723463004714,"corr":0.9509534439819949,"r2":0.9043124526212171,"n":89},"fallback_default_beta":false,"lookback":90,"interval":1440,"btc_price":54587.16,"hedge_notional_usd":8129.36,"btc_short_size":0.148924,"leverage":2,"executed":false},"holdsim":{"input_amount":5000.0,"entry_price":98.91,"tokens_start":50.551006,"tokens_end":55.293039,"yield_tokens":4.742033,"yield_pct":9.3807,"value_if_price_flat":5469.03,"value_if_pull_to_par":5529.3,"assumptions":{"annual_rate":0.09,"compounding":"monthly via rebase multiplier","price_path":"flat (see pull_to_par scenario for reversion)","fx":"amount in USD; ignores USD/EUR moves"},"tool":"holdsim","pair":"STRCx/USD","months":12},"series":{"strcx":[[1748172800,99.02],[1748259200,99.12],[1748345600,99.5],[1748432000,98.94],[1748518400,99.3],[1748604800,99.79],[1748691200,100.34],[1748777600,100.45],[1748864000,100.4],[1748950400,99.89],[1749036800,100.04],[1749123200,99.95],[1749209600,100.21],[1749296000,100.03],[1749382400,99.39],[1749468800,99.99],[1749555200,100.6],[1749641600,100.83],[1749728000,101.06],[1749814400,100.3],[1749900800,99.9],[1749987200,99.19],[1750073600,99.57],[1750160000,99.41],[1750246400,99.0],[1750332800,99.48],[1750419200,99.53],[1750505600,99.18],[1750592000,99.94],[1750678400,100.42],[1750764800,98.87],[1750851200,99.52],[1750937600,100.02],[1751024000,100.68],[1751110400,101.18],[1751196800,100.42],[1751283200,101.02],[1751369600,101.05],[1751456000,101.13],[1751542400,101.15],[1751628800,100.48],[1751715200,101.26],[1751801600,101.16],[1751888000,101.01],[1751974400,101.02],[1752060800,100.53],[1752147200,99.78],[1752233600,99.78],[1752320000,99.95],[1752406400,99.5],[1752492800,99.56],[1752579200,100.53],[1752665600,100.41],[1752752000,100.94],[1752838400,100.56],[1752924800,100.73],[1753011200,101.06],[1753097600,100.66],[1753184000,100.54],[1753270400,100.35],[1753356800,99.89],[1753443200,100.4],[1753529600,100.44],[1753616000,99.96],[1753702400,100.53],[1753788800,100.74],[1753875200,99.95],[1753961600,100.29],[1754048000,100.13],[1754134400,100.38],[1754220800,100.85],[1754307200,100.28],[1754393600,101.25],[1754480000,101.26],[1754566400,100.88],[1754652800,100.76],[1754739200,100.5],[1754825600,100.21],[1754912000,99.92],[1754998400,100.19],[1755084800,100.85],[1755171200,100.68],[1755257600,100.48],[1755344000,100.73],[1755430400,100.76],[1755516800,100.86],[1755603200,100.8],[1755689600,100.87],[1755776000,100.86],[1755862400,100.74],[1755948800,100.86],[1756035200,100.29],[1756121600,100.15],[1756208000,100.18],[1756294400,99.88],[1756380800,99.68],[1756467200,100.12],[1756553600,99.57],[1756640000,98.93],[1756726400,98.71],[1756812800,98.97],[1756899200,99.0],[1756985600,98.61],[1757072000,98.3],[1757158400,98.73],[1757244800,98.75],[1757331200,99.26],[1757417600,99.75],[1757504000,99.52],[1757590400,99.27],[1757676800,99.13],[1757763200,99.2],[1757849600,99.01],[1757936000,99.03],[1758022400,98.47],[1758108800,98.86],[1758195200,98.91]],"mstrx":[[1748172800,150.66],[1748259200,149.15],[1748345600,150.7],[1748432000,141.0],[1748518400,136.72],[1748604800,130.42],[1748691200,137.88],[1748777600,137.58],[1748864000,140.16],[1748950400,138.44],[1749036800,132.33],[1749123200,130.87],[1749209600,137.15],[1749296000,129.66],[1749382400,113.93],[1749468800,123.36],[1749555200,133.91],[1749641600,135.75],[1749728000,136.74],[1749814400,133.16],[1749900800,131.13],[1749987200,121.64],[1750073600,123.7],[1750160000,123.04],[1750246400,110.76],[1750332800,106.52],[1750419200,104.85],[1750505600,100.22],[1750592000,108.51],[1750678400,115.23],[1750764800,99.61],[1750851200,104.93],[1750937600,109.82],[1751024000,113.54],[1751110400,118.38],[1751196800,108.66],[1751283200,114.42],[1751369600,112.23],[1751456000,119.42],[1751542400,124.3],[1751628800,116.81],[1751715200,128.8],[1751801600,120.81],[1751888000,127.95],[1751974400,130.68],[1752060800,131.19],[1752147200,116.29],[1752233600,114.43],[1752320000,110.49],[1752406400,109.93],[1752492800,107.93],[1752579200,113.88],[1752665600,113.4],[1752752000,120.04],[1752838400,112.24],[1752924800,112.41],[1753011200,118.03],[1753097600,124.26],[1753184000,130.59],[1753270400,128.1],[1753356800,124.35],[1753443200,130.78],[1753529600,126.03],[1753616000,126.2],[1753702400,134.77],[1753788800,139.06],[1753875200,135.62],[1753961600,138.98],[1754048000,141.13],[1754134400,149.78],[1754220800,148.67],[1754307200,143.3],[1754393600,157.2],[1754480000,165.1],[1754566400,168.59],[1754652800,166.02],[1754739200,156.04],[1754825600,150.28],[1754912000,142.17],[1754998400,149.02],[1755084800,158.46],[1755171200,155.49],[1755257600,150.38],[1755344000,153.83],[1755430400,156.18],[1755516800,161.68],[1755603200,172.68],[1755689600,176.39],[1755776000,179.96],[1755862400,171.51],[1755948800,179.93],[1756035200,161.46],[1756121600,161.96],[1756208000,155.79],[1756294400,157.88],[1756380800,158.57],[1756467200,163.05],[1756553600,152.01],[1756640000,151.21],[1756726400,144.22],[1756812800,150.41],[1756899200,156.18],[1756985600,148.91],[1757072000,142.81],[1757158400,140.12],[1757244800,141.07],[1757331200,146.85],[1757417600,151.8],[1757504000,148.27],[1757590400,139.64],[1757676800,137.92],[1757763200,142.19],[1757849600,131.53],[1757936000,129.09],[1758022400,117.49],[1758108800,121.92],[1758195200,123.35]],"ratio":[1.5215,1.5047,1.5146,1.4251,1.3768,1.3069,1.3741,1.3696,1.396,1.3859,1.3228,1.3094,1.3686,1.2962,1.1463,1.2337,1.3311,1.3463,1.3531,1.3276,1.3126,1.2263,1.2423,1.2377,1.1188,1.0708,1.0535,1.0105,1.0858,1.1475,1.0075,1.0544,1.098,1.1277,1.17,1.0821,1.1326,1.1106,1.1809,1.2289,1.1625,1.272,1.1942,1.2667,1.2936,1.305,1.1655,1.1468,1.1055,1.1048,1.0841,1.1328,1.1294,1.1892,1.1161,1.116,1.1679,1.2345,1.2989,1.2765,1.2449,1.3026,1.2548,1.2625,1.3406,1.3804,1.3569,1.3858,1.4095,1.4921,1.4742,1.429,1.5526,1.6305,1.6712,1.6477,1.5526,1.4997,1.4228,1.4874,1.5712,1.5444,1.4966,1.5272,1.55,1.603,1.7131,1.7487,1.7843,1.7025,1.784,1.6099,1.6172,1.5551,1.5807,1.5908,1.6285,1.5267,1.5285,1.461,1.5198,1.5776,1.5101,1.4528,1.4192,1.4286,1.4794,1.5218,1.4899,1.4067,1.3913,1.4334,1.3285,1.3035,1.1932,1.2333,1.2471]},"meta":{"repo":"https://github.com/ShariffL/strcx-yield-desk","par":100.0,"btc_perp":"PF_XBTUSD"}};
+
+const PAR = DATA.meta.par;
+const LOC='en-US';
+const fmt = (n,d=2)=>Number(n).toLocaleString(LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd = (n,d=0)=>'$'+Number(n).toLocaleString(LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ---- repo links ----
+document.getElementById('repoLink').href = DATA.meta.repo;
+document.getElementById('repoLink2').href = DATA.meta.repo;
+
+// ---- analytics mirrored from analytics.py ----
+const currentYield = (price,rate)=> (PAR*rate)/price*100;
+const pullToPar    = (price)=> (PAR/price-1)*100;
+const pctToPar     = (price)=> (price/PAR-1)*100;
+function holdSim(amount,price,rate,months){
+  const t0=amount/price, g=Math.pow(1+rate/12,months), t1=t0*g;
+  return {t0,t1,yieldPct:(g-1)*100,valueFlat:t1*price,valuePar:t1*PAR};
+}
+const clampPct = x => Math.max(0,Math.min(100,x));
+
+// ================= SCAN =================
+const scan = DATA.scan;
+const price = scan.price;
+function renderScan(rate){
+  document.getElementById('px').textContent = fmt(price,2);
+  const pct = pctToPar(price);
+  const state = pct < -0.05 ? 'disc' : pct > 0.05 ? 'prem' : 'par';
+  const label = state==='disc'?'DISCOUNT':state==='prem'?'PREMIUM':'AT PAR';
+  const sp = document.getElementById('statePill');
+  sp.className = 'state '+state;
+  sp.textContent = `${label} ${pct>=0?'+':''}${fmt(pct,2)}% vs ${PAR}`;
+  // gauge: map 90..110 -> 0..100%
+  const g = clampPct((price-90)/20*100);
+  document.getElementById('gmark').style.left = g+'%';
+  const cy = currentYield(price,rate);
+  document.getElementById('cy').textContent = fmt(cy,2)+'%';
+  const ptp = pullToPar(price);
+  const ptpEl = document.getElementById('ptp');
+  ptpEl.textContent = (ptp>=0?'+':'')+fmt(ptp,2)+'%';
+  ptpEl.className = 'v '+(ptp>=0?'pos':'warn');
+  const vs = document.getElementById('vspar');
+  vs.textContent = (pct>=0?'+':'')+fmt(pct,2)+'%';
+  vs.className = 'v '+(pct<0?'pos':'warn');
+  document.getElementById('read').innerHTML =
+    pct < -0.25 ? `Trading <b>below par</b> — you're paid to wait: ${fmt(cy,2)}% carry plus <b>${fmt(ptp,2)}%</b> upside if it reverts to par.`
+    : pct > 0.25 ? `Trading <b>above par</b> — yield only, no par upside; size accordingly.`
+    : `Right around par — a clean <b>${fmt(cy,2)}%</b> carry play.`;
+}
+const rateEl = document.getElementById('rate');
+rateEl.addEventListener('input',()=>{
+  document.getElementById('rateVal').textContent = fmt(rateEl.value,1)+'%';
+  renderScan(rateEl.value/100);
+});
+renderScan(0.09);
+
+// ================= PRICE CHART (hand-rolled SVG) =================
+(function(){
+  const pts = DATA.series.strcx.map(p=>p[1]);
+  const W=520,H=200,pad=10;
+  const lo=Math.min(...pts,PAR), hi=Math.max(...pts,PAR);
+  const span=(hi-lo)||1;
+  const X=i=> pad + i*(W-2*pad)/(pts.length-1);
+  const Y=v=> pad + (1-(v-lo)/span)*(H-2*pad);
+  const line = pts.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const area = `${line} L${X(pts.length-1).toFixed(1)} ${H-pad} L${X(0).toFixed(1)} ${H-pad} Z`;
+  const parY = Y(PAR).toFixed(1);
+  const svg=document.getElementById('priceChart');
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#23d3bb" stop-opacity=".30"/>
+        <stop offset="1" stop-color="#23d3bb" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#23d3bb"/>
+      </linearGradient>
+    </defs>
+    <line x1="${pad}" y1="${parY}" x2="${W-pad}" y2="${parY}" stroke="#ffffff" stroke-opacity=".28" stroke-dasharray="4 4"/>
+    <text x="${W-pad}" y="${parY-5}" text-anchor="end" fill="#93a0bd" font-size="10">par ${PAR}</text>
+    <path d="${area}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  `;
+  document.getElementById('cLo').textContent = fmt(Math.min(...pts),2);
+  document.getElementById('cHi').textContent = fmt(Math.max(...pts),2);
+  document.getElementById('cN').textContent = pts.length;
+})();
+
+// ================= RV =================
+(function(){
+  const rv = DATA.rv;
+  document.getElementById('rvRatio').textContent = fmt(rv.ratio,3);
+  const zEl=document.getElementById('rvZ');
+  zEl.textContent = (rv.zscore>=0?'+':'')+fmt(rv.zscore,2);
+  const sig = rv.signal;
+  const sEl=document.getElementById('rvSignal');
+  const map={NEUTRAL:['neutral','NEUTRAL'],TILT_STRCX:['strcx','TILT → STRCx'],TILT_MSTRX:['mstrx','TILT → MSTRx']};
+  sEl.className='signal '+map[sig][0]; sEl.textContent=map[sig][1];
+  document.getElementById('rvRead').textContent = rv.reading;
+  // band: mean ± 2sd window, shade ±1sd
+  const m=rv.ratio_mean, sd=rv.ratio_sd;
+  if(m!=null && sd){
+    const lo=m-2*sd, hi=m+2*sd, w=hi-lo;
+    const pos=x=> clampPct((x-lo)/w*100);
+    document.getElementById('bz').style.left=pos(m-sd)+'%';
+    document.getElementById('bz').style.right=(100-pos(m+sd))+'%';
+    document.getElementById('bmean').style.left=pos(m)+'%';
+    document.getElementById('bcur').style.left=pos(rv.ratio)+'%';
+    document.getElementById('bLo').textContent=fmt(lo,2);
+    document.getElementById('bHi').textContent=fmt(hi,2);
+  }
+})();
+
+// ================= HEDGE =================
+(function(){
+  const h=DATA.hedge, q=h.beta_quality||{};
+  document.getElementById('hBeta').textContent = fmt(h.beta_to_btc,2);
+  document.getElementById('hNot').textContent = usd(h.hedge_notional_usd,0);
+  document.getElementById('hAct').textContent = `SHORT ${fmt(h.btc_short_size,4)} ${DATA.meta.btc_perp}`;
+  document.getElementById('hLev').textContent = h.leverage+'×  (paper)';
+  document.getElementById('hR2').textContent = q.r2!=null?fmt(q.r2,2):'—';
+  document.getElementById('hCorr').textContent = q.corr!=null?(q.corr>=0?'+':'')+fmt(q.corr,2):'—';
+  document.getElementById('hN').textContent = q.n!=null?q.n:'—';
+  document.getElementById('hR2bar').style.width = clampPct((q.r2||0)*100)+'%';
+})();
+
+// ================= HOLD SIM =================
+const amt=document.getElementById('amt'), mo=document.getElementById('mo'), hrate=document.getElementById('hrate');
+function renderHold(){
+  const A=+amt.value, M=+mo.value, R=hrate.value/100;
+  document.getElementById('amtVal').textContent = usd(A,0);
+  document.getElementById('moVal').textContent = M+' month'+(M>1?'s':'');
+  document.getElementById('hrateVal').textContent = fmt(hrate.value,1)+'%';
+  const r=holdSim(A,price,R,M);
+  document.getElementById('t0').textContent = fmt(r.t0,3);
+  document.getElementById('t1').textContent = fmt(r.t1,3);
+  document.getElementById('yp').textContent = '+'+fmt(r.yieldPct,2)+'%';
+  document.getElementById('vf').textContent = usd(r.valueFlat,0);
+  document.getElementById('vp').textContent = usd(r.valuePar,0);
+  document.getElementById('ep').textContent = fmt(price,2);
+}
+[amt,mo,hrate].forEach(el=>el.addEventListener('input',renderHold));
+renderHold();
+</script>
+</body>
+</html>
