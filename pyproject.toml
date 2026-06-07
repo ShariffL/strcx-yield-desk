@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "strcx-yield-desk"
+version = "0.1.0"
+description = "Run the STRCx tokenised preferred like a fixed-income desk, on top of the Kraken CLI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["kraken", "xstocks", "strcx", "fixed-income", "mcp", "agent"]
+
+# Zero runtime dependencies — standard library only.
+dependencies = []
+
+[project.scripts]
+desk = "desk:main"
+
+[tool.setuptools]
+py-modules = ["desk", "analytics", "kraken_client"]
