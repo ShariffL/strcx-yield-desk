@@ -3,6 +3,10 @@
 Goal: show a clear story and hit all five criteria. Everything runs keyless, so you
 can record in one take. Type the commands; say the lines.
 
+**Two ways to record:** the **CLI script** below (the core story), or the **browser
+walkthrough** at the end for a more visual cut. The dashboard is live at
+**https://shariffl.github.io/strcx-yield-desk/** (or open `docs/index.html` locally).
+
 ---
 
 **0:00 — The hook (innovation)**
@@ -52,6 +56,42 @@ kraken mcp -s market,paper,futures
 
 **2:30 — Close**
 > "STRCx Yield Desk: a tokenised preferred, run like credit, fully verifiable, zero keys."
+
+---
+
+## Browser walkthrough (~60s visual cut)
+
+Same story, shown on the dashboard — great as an opener, a B-roll overlay, or a
+standalone clip. Open **https://shariffl.github.io/strcx-yield-desk/** (or
+`docs/index.html`) fullscreen (⌃⌘F) and screen-record with ⇧⌘5.
+
+**0:00 — The frame (innovation)**
+> "This is the desk as a dashboard. STRCx is a tokenised *preferred* — it should sit
+> near $100 par — so the whole UI is a fixed-income lens, not a price ticker."
+- Point at the header: *keyless · runs cold*.
+
+**0:10 — Scan (clarity + use of CLI)**
+> "Live from the Kraken CLI: 98.91, about a percent under par. The gauge shows where
+> it sits versus par; I'm earning ~9% current yield with upside to par."
+- Drag the **coupon slider** — "STRC's coupon is variable, so I can stress it; the
+  yield reprices instantly." Glance at the price-history chart against the par line.
+
+**0:25 — Relative value (innovation)**
+> "MSTRx, the volatile common, against STRCx, the stable preferred. The z-score sits
+> inside its ±1σ band, so the signal is NEUTRAL — no strong edge right now."
+
+**0:35 — Hedge (technical execution)**
+> "If I hold the common for upside, the real risk underneath is Bitcoin. The desk
+> estimates a 1.6 beta — R² 0.90 — and sizes an $8k short in futures paper. No keys."
+
+**0:45 — Hold simulator (practical utility)**
+> "And it's interactive — park $5k for a year and the rebase multiplier compounds the
+> balance; here's the value flat versus pulling to par."
+- Drag **amount** and **period** sliders; let the numbers animate.
+
+**0:60 — Close**
+> "Every number here is baked from the same `desk.py` engine the CLI runs — verifiable,
+> reproducible, zero keys."
 
 ---
 
