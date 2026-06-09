@@ -5,11 +5,13 @@ network, no dependencies — just like the CLI, a judge can open it cold.
 
 ## View it
 
-Open the file directly in any browser:
+**Live:** https://shariffl.github.io/strcx-yield-desk/
+
+Or open the file directly in any browser:
 
 ```bash
-open web/index.html          # macOS
-# or just double-click web/index.html
+open docs/index.html         # macOS
+# or just double-click docs/index.html
 ```
 
 It works over `file://` because everything (data, charts, logic) is inlined —
@@ -30,18 +32,23 @@ The numbers are **baked from the real `desk.py` engine** (mock dataset), not
 hand-typed. To refresh them after changing the analytics or mock data:
 
 ```bash
-python3 web/build.py         # runs desk.py --json and rewrites web/index.html
+python3 docs/build.py        # runs desk.py --json and rewrites docs/index.html
 ```
 
 `build.py` runs each subcommand with `--mock … --json`, pulls the OHLC series via
 `kraken_client`, and injects the result into `template.html`. Only the small
 interactive math (hold simulation, current yield) is mirrored in JS.
 
-## A shareable URL for the jury (optional)
+## Live URL (GitHub Pages)
 
-`index.html` is static, so it can go on any static host. For GitHub Pages, the
-simplest route is to serve it from a `/docs` folder or the repo root (Pages can't
-serve an arbitrary `web/` subfolder directly).
+This folder is `docs/` so GitHub Pages can serve it directly. Enable it once:
+
+> **Settings → Pages → Build and deployment → Deploy from a branch →
+> Branch: `main`, Folder: `/docs` → Save**
+
+After ~1 minute the dashboard is live at
+**https://shariffl.github.io/strcx-yield-desk/** (the `.nojekyll` file makes Pages
+serve the static files as-is).
 
 ## Note on the logo
 

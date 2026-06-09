@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build.py — generate web/index.html for the STRCx Yield Desk.
+build.py — generate docs/index.html for the STRCx Yield Desk.
 
 The dashboard is a single, self-contained HTML file (no CDN, no network, no
 build tooling) so a judge can open it cold — exactly like the CLI runs keyless.
@@ -8,7 +8,10 @@ Numbers are not hand-typed: this script runs the real desk.py engine in --mock
 mode and bakes the authentic JSON into the page, then mirrors only the small
 interactive math (hold simulation, current yield) in JS.
 
-Run:  python3 web/build.py     ->  writes web/index.html
+Lives in docs/ so GitHub Pages can serve it directly (Settings -> Pages ->
+deploy from branch -> main -> /docs).
+
+Run:  python3 docs/build.py     ->  writes docs/index.html
 """
 from __future__ import annotations
 import json
@@ -16,8 +19,8 @@ import os
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WEB = os.path.join(ROOT, "web")
+WEB = os.path.dirname(os.path.abspath(__file__))   # this folder (docs/)
+ROOT = os.path.dirname(WEB)                         # project root
 sys.path.insert(0, ROOT)
 
 import kraken_client as K          # noqa: E402
@@ -76,7 +79,7 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"wrote {out_path}  ({len(html):,} bytes)")
-    print("open it:  open web/index.html")
+    print("open it:  open docs/index.html")
 
 
 if __name__ == "__main__":

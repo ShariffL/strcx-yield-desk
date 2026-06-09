@@ -55,16 +55,19 @@ python3 tests/test_analytics.py        # 11/11 unit tests on the math
 
 ## Browser UI
 
-A self-contained dashboard lives in [`web/`](web/) — open it cold, no server or
+A self-contained dashboard lives in [`docs/`](docs/) — open it cold, no server or
 network needed:
 
 ```bash
-open web/index.html        # macOS (or just double-click it)
+open docs/index.html       # macOS (or just double-click it)
 ```
 
 It renders the scan/RV/hedge cards and an interactive hold simulator, with the
 numbers **baked from the real `desk.py` engine** (regenerate with
-`python3 web/build.py`). See [`web/README.md`](web/README.md) for details.
+`python3 docs/build.py`). See [`docs/README.md`](docs/README.md) for details.
+
+**Live (GitHub Pages):** https://shariffl.github.io/strcx-yield-desk/ —
+enable once via *Settings → Pages → Deploy from a branch → `main` / `/docs`*.
 
 ## Run it for real (keyless)
 
